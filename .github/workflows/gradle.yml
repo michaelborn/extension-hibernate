@@ -3,7 +3,7 @@ name: Run Gradle on PRs
 on: pull_request
 
 jobs:
-  gradle:
+  build:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]

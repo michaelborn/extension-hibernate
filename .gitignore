@@ -10,8 +10,12 @@ target/*
 *.lock
 *.DS_Store
 /cache
-# Ignore Gradle project-specific cache directory
+# Ignore Gradle cache and binary directories
 .gradle
+bin/
 
 # Ignore Gradle build output directory
 build
+
+# Ignore lucee test runner
+script-runner/

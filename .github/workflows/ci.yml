@@ -1,0 +1,38 @@
+name: Run Gradle on PRs
+
+on: [push, workflow_dispatch]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        luceeversion: [ "5.3.9" ]
+        jvmversion: [ 8, 10, 11 ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-java@v3
+      with:
+        distribution: temurin
+        java-version: ${{ matrix.jvmversion }}
+        
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+
+    # set up custom lucee install for test
+    # Unfortunately, we'll need to rewrite the lucee script runner for Gradle.
+    # https://github.com/lucee/script-runner
+    - name: Run Lucee Test Suite (testFilter="orm")
+      uses: lucee/script-runner@main
+      with:
+        webroot: ${{ github.workspace }}/lucee/test
+        execute: /bootstrap-tests.cfm
+        luceeVersion: ${{ env.luceeVersion }}
+        extensionDir: ${{ github.workspace }}/dist
+        extensions: 8D7FB0DF-08BB-1589-FE3975678F07DB17,37C61C0A-5D7E-4256-8572639BE0CF5838 # the compress and esapi extensions are required to run tests lucee with lucee-light
+      env:
+        testLabels: orm
+        testAdditional: ${{ github.workspace }}/tests
+
+    - name: Run tests
+      run: ./gradlew test

@@ -18,16 +18,33 @@ sourceSets {
         }
     }
 }
+configurations {
+    lucee
+
+    lucee.extendsFrom compileClasspath
+    lucee.extendsFrom runtimeClasspath
+}
+ext {
+    luceeVersion = '5.3.10.79-RC'
+}
 dependencies {
+
     // https://mvnrepository.com/artifact/org.lucee/lucee
-    implementation group: 'org.lucee', name: 'lucee', version: '5.3.9.160'
+    lucee group: 'org.lucee', name: 'lucee', version: project.ext.luceeVersion
 
     // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
     implementation group: 'org.hibernate', name: 'hibernate-core', version: '5.4.29.Final'
 
     // https://mvnrepository.com/artifact/org.hibernate/hibernate-ehcache
     implementation group: 'org.hibernate', name: 'hibernate-ehcache', version: '5.4.29.Final'
+
+    // javax servlet for the ant build class
+	implementation group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+	implementation group: 'javax.servlet', name: 'jsp-api', version: '2.0'
+	implementation group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
 }
+
+ant.importBuild 'script-runner/build-run-cfml.xml'
 
 project.ext.buildDate = new Date()
 
@@ -89,6 +106,7 @@ task generateDocs(type: Javadoc) {
  */
 task toLex(type: Jar){
     from sourceSets.main.java
+    // from { configurations.lucee }
     archiveExtension  = "lex"
     // archiveBaseName is defined in the gradle properties file
     archiveAppendix = "orm"
@@ -111,15 +129,94 @@ task toLex(type: Jar){
         attributes 'lucee-core-version' : project.luceeCoreVersion
     }
 }
+jar{
+    from sourceSets.main.java
+    // archiveBaseName is defined in the gradle properties file
+    archiveAppendix = "orm"
+    // archiveClassifier = project.versionAppendix
 
-task fullBuild{
-    // dependsOn test
+    /**
+     * TODO: Reuse all these from the `toLex` config.
+     * @cite https://stackoverflow.com/a/53912585
+     */
+    manifest {
+        from "source/java/src/META-INF/MANIFEST.MF"
+        // TODO: may need to format for Lucee support
+        attributes 'Built-Date' : project.ext.buildDate
+        attributes 'version' : project.version
+        attributes 'id' : project.id
+        attributes 'name' : project.label
+        attributes 'description' : project.description
+        attributes 'start-bundles' : false
+        attributes 'release-type' : project.releaseType
+        attributes 'orm' : new groovy.json.JsonOutput().toJson( [ ormEngineConfig ] )
+        attributes 'lucee-core-version' : project.luceeCoreVersion
+        /**
+         * Fixes "no main manifest attribute" error.
+         * Only needed in the .jar manifest.
+         * @cite https://stackoverflow.com/a/9689877
+         */
+        attributes 'Main-Class' : 'org.lucee.extension.orm.hibernate.Main'
+    }
+}
+
+/**
+ * @cite https://docs.gradle.org/current/dsl/org.gradle.api.tasks.JavaExec.html#org.gradle.api.tasks.JavaExec:jvmArgs
+ */
+task runCFTests(type: JavaExec) {
+    // Executable jars can have only _one_ jar on the classpath.
+    // classpath = files(tasks.jar)
+
+    // 'main' does not need to be specified
+    "ant all".execute();
+
+    // arguments to pass to the application
+    // args 'appArg1'
+    jvmArgs 'Dlucee.base.dir'        : '${temp}/lucee'
+    jvmArgs 'Dlucee.web.dir'         : '${temp}/lucee/web'
+    jvmArgs 'Dwebroot'               : '${webroot}'
+    jvmArgs 'Dexecute'               : '${execute}'
+    jvmArgs 'DexecuteScriptByInclude': '${executeScriptByInclude}'
+    jvmArgs 'DextensionDir'          : '${extensionDir}'
+    jvmArgs 'Dlucee.extensions'      : '${extensions}'
+    jvmArgs 'Dlucee.mapping.first'   : 'true'
+    /*
+    'Xdebug'
+    'Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000'
+    'Djava.net.useSystemProxies=true'
+    'Dhttps.proxyHost=127.0.0.1'
+    'Dhttps.proxyPort=8188'
+    'Dhttp.proxyHost=127.0.0.1'
+    'Dhttp.proxyPort=8188'
+    */
+    // ant -buildfile ${{ github.action_path }}/build.xml -DluceeVersion="${{ inputs.luceeVersion }}" -Dwebroot="${{ inputs.webroot }}" -Dexecute="${{ inputs.execute }}" -Dextensions="${{ inputs.extensions }}" -DextensionDir="${{ inputs.extensionDir }}"
+    // ant[ "testCFML" ]();
+    // imported from lucee/script-runner
+    // dependsOn testCFML
+    // imported from lucee/script-runner
+    dependsOn all
+}
+
+// task tryRunningLuceeTests( type: JavaExec){
+//     // Executable jars can have only _one_ jar on the classpath.
+//     // UGH, how to get the full lucee jar into the class path?
+//     // println "Classpath = ${sourceSets.main.compileClasspath.asPath}";
+//     // configurations.lucee.each { File file -> println file.name }
+//     classpath = files( "lucee-${project.ext.luceeVersion}.jar" )
+//     // lucee-5.3.10.79-RC.jar
+//     mainClass = 'lucee.runtime.script.Main'
+// }
+
+build{
+    dependsOn compileJava
+    dependsOn jar
+    dependsOn toLex
+
+    dependsOn test
+    // dependsOn tryRunningLuceeTests
     /**
      * sadly, the docs build fails because it doesn't recognize some Lucee classes.
      * This makes no sense, as they are defined as dependencies and clearly work for the `compileJava` task... 🤷
      */
     // dependsOn generateDocs
-    dependsOn compileJava
-    dependsOn build
-    dependsOn toLex
 }
