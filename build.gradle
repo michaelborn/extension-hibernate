@@ -7,6 +7,7 @@
  */
 plugins{
     id 'java'
+    id "com.athaydes.osgi-run" version "2.0"
 }
 repositories {
     mavenCentral()
@@ -17,20 +18,25 @@ sourceSets {
             srcDirs "source/java/src"
         }
     }
+    // lucee{
+    //     java{
+    //         srcDirs = [ "" ]
+    //     }
+    // }
 }
-configurations {
-    lucee
+// configurations {
+//     lucee
 
-    lucee.extendsFrom compileClasspath
-    lucee.extendsFrom runtimeClasspath
-}
+//     // lucee.extendsFrom compileClasspath
+//     // lucee.extendsFrom runtimeClasspath
+// }
 ext {
     luceeVersion = '5.3.10.79-RC'
 }
 dependencies {
 
     // https://mvnrepository.com/artifact/org.lucee/lucee
-    lucee group: 'org.lucee', name: 'lucee', version: project.ext.luceeVersion
+    implementation group: 'org.lucee', name: 'lucee', version: project.ext.luceeVersion
 
     // https://mvnrepository.com/artifact/org.hibernate/hibernate-core
     implementation group: 'org.hibernate', name: 'hibernate-core', version: '5.4.29.Final'
@@ -98,13 +104,13 @@ project.ext.buildnumber = props[ "build.number" ]
 project.version = project.version + "." + project.ext.buildnumber + project.ext.versionAppendix
 
 
-task generateDocs(type: Javadoc) {
+javadoc {
   source = sourceSets.main.java
 }
 /**
  * @cite https://docs.gradle.org/current/dsl/org.gradle.api.tasks.bundling.Jar.html
  */
-task toLex(type: Jar){
+task lex(type: Jar){
     from sourceSets.main.java
     // from { configurations.lucee }
     archiveExtension  = "lex"
@@ -136,7 +142,7 @@ jar{
     // archiveClassifier = project.versionAppendix
 
     /**
-     * TODO: Reuse all these from the `toLex` config.
+     * TODO: Reuse all these from the `lex` config.
      * @cite https://stackoverflow.com/a/53912585
      */
     manifest {
@@ -158,6 +164,24 @@ jar{
          */
         attributes 'Main-Class' : 'org.lucee.extension.orm.hibernate.Main'
     }
+}
+
+/**
+ * @cite https://www.baeldung.com/gradle-fat-jar#creating-a-separate-task
+ */
+task luceeJar( type: Jar){
+    archiveAppendix = "all"
+
+    include "lucee/**"
+
+    manifest{
+        attributes 'Main-Class' : 'lucee.runtime.script.Main'
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    /**
+     * @cite https://www.baeldung.com/gradle-fat-jar#using-the-jar-task-from-the-java-plugin
+     */
+    from { configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) } }
 }
 
 /**
@@ -203,20 +227,65 @@ task runCFTests(type: JavaExec) {
 //     // println "Classpath = ${sourceSets.main.compileClasspath.asPath}";
 //     // configurations.lucee.each { File file -> println file.name }
 //     classpath = files( "lucee-${project.ext.luceeVersion}.jar" )
+
 //     // lucee-5.3.10.79-RC.jar
 //     mainClass = 'lucee.runtime.script.Main'
 // }
 
+task runWithJavaExec(type: JavaExec) {
+    group = "Execution"
+    description = "Run the main class with JavaExecTask"
+    classpath = files( "lucee-${project.ext.luceeVersion}.jar" )
+    mainClass = 'org.lucee.runtime.script.Main'
+
+    // classpath.each { File file -> println file.name }
+}
+
+// task luceeJar( type: Jar){
+//         sourceSets.main.compileClasspath.collect { it.name LIKE 'org.lucee/lucee/' }
+//     from { 
+//     }
+// }
+task runWithExec(type: Exec) {
+    dependsOn build
+    group = "Execution"
+    description = "Run the main class with ExecTask"
+
+    // <classpath path="${java.class.path}">
+    //     <pathelement location="${cache}/lucee-${luceeVersion}.jar"/>
+    //     <pathelement path="${runtime_classpath}"/>
+    // </classpath>
+    // <arg value="-f"/>
+    // <arg value="../../build-run-cfml.xml"/>
+    // <jvmarg value="-Dlucee.base.dir=${temp}/lucee"/>
+    // <jvmarg value="-Dlucee.web.dir=${temp}/lucee/web"/>
+    // <jvmarg value="-Dwebroot=${webroot}"/>
+    // <jvmarg value="-Dexecute=${execute}"/>
+    // <jvmarg value="-DexecuteScriptByInclude=${executeScriptByInclude}"/>
+    // <jvmarg value="-DextensionDir=${extensionDir}"/>
+    // <jvmarg value="-Dlucee.extensions=${extensions}"/>
+    // <jvmarg value="-Dlucee.mapping.first=true"/>
+    // DEBUG STUFF
+    // <jvmarg value="-Xdebug"/>
+    // <jvmarg value="-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000"/>
+    // <jvmarg value="-Djava.net.useSystemProxies=true"/>
+    // <jvmarg value="-Dhttps.proxyHost=127.0.0.1"/>
+    // <jvmarg value="-Dhttps.proxyPort=8188"/>
+    // <jvmarg value="-Dhttp.proxyHost=127.0.0.1"/>
+    // <jvmarg value="-Dhttp.proxyPort=8188"/>
+    commandLine "java", "-classpath", "lucee-${project.ext.luceeVersion}.jar", 'lucee.runtime.script.Main'
+}
+
 build{
     dependsOn compileJava
     dependsOn jar
-    dependsOn toLex
+    dependsOn lex
 
-    dependsOn test
+    // dependsOn test
     // dependsOn tryRunningLuceeTests
     /**
      * sadly, the docs build fails because it doesn't recognize some Lucee classes.
      * This makes no sense, as they are defined as dependencies and clearly work for the `compileJava` task... 🤷
      */
-    // dependsOn generateDocs
+    dependsOn javadoc
 }
