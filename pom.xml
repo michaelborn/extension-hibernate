@@ -3,9 +3,10 @@
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>org.lucee</groupId>
-   <artifactId>extension.hibernate</artifactId>
+   <artifactId>extension.ortushibernate</artifactId>
    <version>5.0.0.99-SNAPSHOT</version>
-   <packaging>jar</packaging>
+   <!-- <packaging>jar</packaging> -->
+   <packaging>bundle</packaging>
 
    <name>Extension Hibernate</name>
    <description>Lucee Extension for Hibernate ORM Engine.</description>
@@ -114,9 +115,30 @@
                </excludes>
                <archive>
                   <manifestFile>src/main/java/META-INF/MANIFEST.MF</manifestFile>
-                  <manifest>
-                     <mainClass>${main.class}</mainClass>
-                  </manifest>
+                  <manifestEntries>
+                     <mainClass>${class}</mainClass>
+                     <id>${id}</id>
+                     <name>${name}</name>
+                     <version>${version}</version>
+                     <description>${description}</description>
+                     <orm>[{'class':'org.lucee.extension.orm.hibernate.HibernateORMEngine','name':'hibernate.extension','version':'3.5.5.84'}]</orm>
+                     <lucee-core-version>${luceeCoreVersion}</lucee-core-version>
+                     <class>${class}</class>
+                     <releaseType>${releaseType}</releaseType>
+                     <!-- bundlename: hibernate.extension
+bundleversion:5.4.29.
+versionAppendix: -BETA
+id: FAD1E8CB-4F45-4184-86359145767C29DE
+luceeCoreVersion: 5.3.9.73
+releaseType: server
+label: Hibernate ORM Engine
+description: Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language,
+ providing a framework for mapping an object-oriented domain model to a traditional relational database. 
+ Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related 
+ database accesses with high-level object handling functions.
+class: org.lucee.extension.orm.hibernate.HibernateORMEngine 
+-->
+                  </manifestEntries>
                </archive>
             </configuration>
          </plugin>
@@ -128,11 +150,31 @@
             <configuration>
                <source>1.7</source>
                <target>1.7</target>
-
             </configuration>
 
          </plugin>
 
+         <plugin>
+               <groupId>org.apache.felix</groupId>
+               <artifactId>maven-bundle-plugin</artifactId>
+               <version>5.1.8</version>
+               <extensions>true</extensions>
+               <configuration>
+                  <instructions>
+                     <Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
+                     <Bundle-Name>${pom.artifactId}</Bundle-Name>
+                     <Bundle-Version>1.0.0</Bundle-Version>
+                     <Private-Package>org.lucee.extension.orm.hibernate</Private-Package>
+                     <!-- <Bundle-Activator>org.lucee.extension.orm.hibernate.Activator</Bundle-Activator> -->
+                     <Import-Package>
+                        net.sf.ehcache.hibernate
+                     </Import-Package>
+                     <Export-Package>
+                        org.lucee.extension.orm.hibernate,org.lucee.extension.orm.hibernate.jdbc
+                     </Export-Package>
+                  </instructions>
+               </configuration>
+         </plugin>
       </plugins>
 
    </build>
