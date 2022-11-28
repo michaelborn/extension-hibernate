@@ -4,7 +4,7 @@
 
    <groupId>org.lucee</groupId>
    <artifactId>extension.ortushibernate</artifactId>
-   <version>5.0.0.99-SNAPSHOT</version>
+   <version>5.4.29.20-BETA</version>
    <!-- <packaging>jar</packaging> -->
    <packaging>bundle</packaging>
 
@@ -14,13 +14,23 @@
 
 
    <properties>
+      <name>Hibernate ORM Engine</name>
       <bundlename>hibernate.extension</bundlename>
       <id>FAD1E8CB-4F45-4184-86359145767C29DE</id>
+      <bundleversion>5.4.29.</bundleversion>
+      <versionAppendix>-BETA</versionAppendix>
+      <releaseType>server</releaseType>
       <description>Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language,
  providing a framework for mapping an object-oriented domain model to a traditional relational database. 
  Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related 
  database accesses with high-level object handling functions.</description>
       <class>org.lucee.extension.orm.hibernate.HibernateORMEngine</class>
+      <!-- arg, <version> must be defined at the top level of pom.xml.-->
+      <!-- <version>${bundleversion}${build.number}${versionAppendix}</version> -->
+
+      <!-- Dependency versions -->
+      <lucee.version>5.3.9.133</lucee.version>
+      <hibernate.version>5.4.29.Final</hibernate.version>
    </properties>
 
    <licenses>
@@ -119,25 +129,14 @@
                      <mainClass>${class}</mainClass>
                      <id>${id}</id>
                      <name>${name}</name>
+                     <startBundles>false</startBundles>
+                     <builtDate>${NOW}</builtDate>
                      <version>${version}</version>
-                     <description>${description}</description>
-                     <orm>[{'class':'org.lucee.extension.orm.hibernate.HibernateORMEngine','name':'hibernate.extension','version':'3.5.5.84'}]</orm>
-                     <lucee-core-version>${luceeCoreVersion}</lucee-core-version>
-                     <class>${class}</class>
                      <releaseType>${releaseType}</releaseType>
-                     <!-- bundlename: hibernate.extension
-bundleversion:5.4.29.
-versionAppendix: -BETA
-id: FAD1E8CB-4F45-4184-86359145767C29DE
-luceeCoreVersion: 5.3.9.73
-releaseType: server
-label: Hibernate ORM Engine
-description: Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language,
- providing a framework for mapping an object-oriented domain model to a traditional relational database. 
- Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related 
- database accesses with high-level object handling functions.
-class: org.lucee.extension.orm.hibernate.HibernateORMEngine 
--->
+                     <class>${class}</class>
+                     <description>${description}</description>
+                     <orm>[{'class':'org.lucee.extension.orm.hibernate.HibernateORMEngine','name':'hibernate.extension','version':'${version}'}]</orm>
+                     <lucee-core-version>${lucee.version}</lucee-core-version>
                   </manifestEntries>
                </archive>
             </configuration>
@@ -196,21 +195,21 @@ class: org.lucee.extension.orm.hibernate.HibernateORMEngine
       <dependency>
          <groupId>org.lucee</groupId>
          <artifactId>lucee</artifactId>
-         <version>5.3.10.79-RC</version>
+         <version>${lucee.version}</version>
       </dependency>
 
       <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
       <dependency>
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-core</artifactId>
-         <version>5.4.29.Final</version>
+         <version>${hibernate.version}</version>
       </dependency>
 
       <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-ehcache -->
       <dependency>
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-ehcache</artifactId>
-         <version>5.4.29.Final</version>
+         <version>${hibernate.version}</version>
       </dependency>
       <!-- w3c.dom - 1.1.0 -->
       <dependency>
