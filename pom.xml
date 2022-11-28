@@ -3,7 +3,7 @@
    <modelVersion>4.0.0</modelVersion>
 
    <groupId>org.lucee</groupId>
-   <artifactId>extension.ortushibernate</artifactId>
+   <artifactId>ortushibernate</artifactId>
    <version>5.4.29.20-BETA</version>
    <!-- <packaging>jar</packaging> -->
    <packaging>bundle</packaging>
@@ -173,6 +173,26 @@
                      </Export-Package>
                   </instructions>
                </configuration>
+         </plugin>
+
+         <!-- https://stackoverflow.com/a/26638952 -->
+         <plugin>
+            <groupId>com.coderplus.maven.plugins</groupId>
+            <artifactId>copy-rename-maven-plugin</artifactId>
+            <version>1.0.1</version>
+            <executions>
+               <execution>
+               <id>copy-file</id>
+               <phase>package</phase>
+               <goals>
+                  <goal>copy</goal>
+               </goals>
+               <configuration>
+                  <sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
+                  <destinationFile>${project.build.directory}/${project.build.finalName}.lex</destinationFile>
+               </configuration>
+               </execution>
+            </executions>
          </plugin>
       </plugins>
 
