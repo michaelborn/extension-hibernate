@@ -1,13 +1,22 @@
-/dist
+# Ignore various build outputs
+dist
+.gradle
+bin
+target
 temp
+
+# Ignore various temp files
 **/.DS_Store
+*.lock
+*.DS_Store
+
+# Ignore various dev artifacts
 **/.svn/
 /*.project
 va specific
 *.class
-target
-target/*
-*.lock
-*.DS_Store
-/cache
+cache
+
+# Ignore build.properties - this is meant to be developer-specific.
+# Permanent build properties should be in the pom.xml.
 build.properties
