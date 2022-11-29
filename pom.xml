@@ -4,19 +4,20 @@
 
    <groupId>org.lucee</groupId>
    <artifactId>ortushibernate</artifactId>
+   <!-- look into the maven release plugin to automate bumping the version.-->
    <version>5.4.29.20-BETA</version>
    <!-- <packaging>jar</packaging> -->
    <packaging>bundle</packaging>
 
-   <name>Extension Hibernate</name>
+   <name>Ortus Hibernate Extension</name>
    <description>Lucee Extension for Hibernate ORM Engine.</description>
    <url>http://maven.lucee.org/extension/hibernate</url>
 
 
    <properties>
       <name>Hibernate ORM Engine</name>
-      <bundlename>hibernate.extension</bundlename>
-      <id>FAD1E8CB-4F45-4184-86359145767C29DE</id>
+      <bundlename>ortus.hibernate</bundlename>
+      <id>b0e494c1-2ff8-44d5-a89770af769e568c</id>
       <bundleversion>5.4.29.</bundleversion>
       <versionAppendix>-BETA</versionAppendix>
       <releaseType>server</releaseType>
@@ -25,12 +26,17 @@
  Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related 
  database accesses with high-level object handling functions.</description>
       <class>org.lucee.extension.orm.hibernate.HibernateORMEngine</class>
-      <!-- arg, <version> must be defined at the top level of pom.xml.-->
+      <!-- arg, <version> must be defined at the top level of pom.xml, so this approach doesn't work.-->
+      <!-- <bundleversion>5.4.29.</bundleversion>
+      <versionAppendix>-BETA</versionAppendix> -->
       <!-- <version>${bundleversion}${build.number}${versionAppendix}</version> -->
 
       <!-- Dependency versions -->
       <lucee.version>5.3.9.133</lucee.version>
       <hibernate.version>5.4.29.Final</hibernate.version>
+
+      <!-- What version of the JDK should we compile against? -->
+      <jdk.version>1.7</jdk.version>
    </properties>
 
    <licenses>
@@ -87,6 +93,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-source-plugin</artifactId>
+            <version>3.2.1</version>
             <executions>
                <execution>
                   <id>attach-sources</id>
@@ -100,6 +107,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.4.1</version>
             <executions>
                <execution>
                   <id>attach-javadocs</id>
@@ -131,11 +139,11 @@
                      <name>${name}</name>
                      <startBundles>false</startBundles>
                      <builtDate>${NOW}</builtDate>
-                     <version>${version}</version>
+                     <version>${project.version}</version>
                      <releaseType>${releaseType}</releaseType>
                      <class>${class}</class>
                      <description>${description}</description>
-                     <orm>[{'class':'org.lucee.extension.orm.hibernate.HibernateORMEngine','name':'hibernate.extension','version':'${version}'}]</orm>
+                     <orm>[{'class':'${class}','name':'${bundlename}','version':'${project.version}'}]</orm>
                      <lucee-core-version>${lucee.version}</lucee-core-version>
                   </manifestEntries>
                </archive>
@@ -147,8 +155,8 @@
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.3</version>
             <configuration>
-               <source>1.7</source>
-               <target>1.7</target>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
             </configuration>
 
          </plugin>
@@ -160,8 +168,8 @@
                <extensions>true</extensions>
                <configuration>
                   <instructions>
-                     <Bundle-SymbolicName>${pom.groupId}.${pom.artifactId}</Bundle-SymbolicName>
-                     <Bundle-Name>${pom.artifactId}</Bundle-Name>
+                     <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+                     <Bundle-Name>${project.artifactId}</Bundle-Name>
                      <Bundle-Version>1.0.0</Bundle-Version>
                      <Private-Package>org.lucee.extension.orm.hibernate</Private-Package>
                      <!-- <Bundle-Activator>org.lucee.extension.orm.hibernate.Activator</Bundle-Activator> -->
@@ -173,6 +181,36 @@
                      </Export-Package>
                   </instructions>
                </configuration>
+         </plugin>
+
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.4.1</version>
+            <configuration>
+               <!-- put your configurations here -->
+               <minimizeJar>true</minimizeJar>
+               <artifactSet>
+                  <includes>
+                     <include>org.hibernate:*</include>
+                     <include>javax.servlet:*</include>
+                     <include>antlr:*</include>
+                     <include>org.dom4j:*</include>
+                     <include>org.javaassist:*</include>
+                     <include>jta:*</include>
+                     <include>w3c:dom:*</include>
+                     <include>org-apache-commons-collections:*</include>
+                  </includes>
+               </artifactSet>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>shade</goal>
+                  </goals>
+               </execution>
+            </executions>
          </plugin>
 
          <!-- https://stackoverflow.com/a/26638952 -->
@@ -218,12 +256,20 @@
          <version>${lucee.version}</version>
       </dependency>
 
-      <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+      <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-osgi -->
       <dependency>
+         <groupId>org.hibernate</groupId>
+         <artifactId>hibernate-osgi</artifactId>
+         <version>${hibernate.version}</version>
+      </dependency>
+
+      <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+      <!-- DISABLED: Prefer Hibernate OSGI package. -->
+      <!-- <dependency>
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-core</artifactId>
          <version>${hibernate.version}</version>
-      </dependency>
+      </dependency> -->
 
       <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-ehcache -->
       <dependency>
@@ -238,15 +284,29 @@
          <type>jar</type>
          <version>1.1.0</version>
       </dependency>
+
+      <!-- https://mvnrepository.com/artifact/antlr/antlr -->
+      <!-- DISABLED: Prefer Hibernate OSGI package, which bundles dependencies. -->
+      <!-- <dependency >
+         <groupId>antlr</groupId>
+         <artifactId>antlr</artifactId>
+         <version>2.7.6</version>
+      </dependency> -->
+
+      <!-- https://mvnrepository.com/artifact/dom4j/dom4j -->
+      <!-- WARNING: CVEs! See mvnrepo link for more info. -->
+      <!-- DISABLED: Prefer Hibernate OSGI package, which bundles dependencies. -->
+      <!-- <dependency>
+         <groupId>dom4j</groupId>
+         <artifactId>dom4j</artifactId>
+         <version>1.6.1</version>
+      </dependency> -->
+
    </dependencies>
 
 
 
    <repositories>
-      <repository>
-         <id>repo</id>
-         <url>https://raw.githubusercontent.com/lucee/mvn/master/releases</url>
-      </repository>
       <repository>
          <id>snapi</id>
          <url>https://oss.sonatype.org/content/repositories/snapshots</url>
@@ -254,9 +314,9 @@
    </repositories>
 
    <scm>
-      <url>https://github.com/lucee/Lucee</url>
-      <connection>scm:git:git://github.com/lucee/Lucee.git</connection>
-      <developerConnection>scm:git:git@github.com:lucee/Lucee.git</developerConnection>
+      <url>https://github.com/michaelborn/extension-hibernate</url>
+      <connection>scm:git:git://github.com/michaelborn/extension-hibernate.git</connection>
+      <developerConnection>scm:git:git@github.com:michaelborn/extension-hibernate.git</developerConnection>
       <tag>${project.version}</tag>
    </scm>
 
