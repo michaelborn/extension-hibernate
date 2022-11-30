@@ -307,9 +307,14 @@
 
 
    <repositories>
+      <!-- Needed for the w3c dom dependency.-->
       <repository>
-         <id>snapi</id>
-         <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+         <id>repo</id>
+         <url>https://raw.githubusercontent.com/lucee/mvn/master/releases</url>
+      </repository>
+      <repository>
+         <id>maven</id>
+         <url>https://repo1.maven.org/maven2/</url>
       </repository>
    </repositories>
 
