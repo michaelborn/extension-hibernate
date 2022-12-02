@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.lucee</groupId>
-  <artifactId>ortushibernate</artifactId>
+  <artifactId>hibernate.extension</artifactId>
   <packaging>bundle</packaging>
   <name>Ortus Hibernate Extension</name>
   <version>5.4.29.20-BETA</version>
@@ -38,18 +38,6 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>3.4.1</version>
         <executions>
@@ -60,32 +48,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.6</version>
-        <extensions>true</extensions>
-        <configuration>
-          <excludes>
-            <exclude>.*</exclude>
-          </excludes>
-          <archive>
-            <manifestFile>src/main/java/META-INF/MANIFEST.MF</manifestFile>
-            <manifestEntries>
-              <mainClass>${class}</mainClass>
-              <id>${id}</id>
-              <name>${name}</name>
-              <startBundles>false</startBundles>
-              <builtDate>${NOW}</builtDate>
-              <version>${project.version}</version>
-              <releaseType>${releaseType}</releaseType>
-              <class>${class}</class>
-              <description>${description}</description>
-              <orm>[{'class':'${class}','name':'${bundlename}','version':'${project.version}'}]</orm>
-              <lucee-core-version>${lucee.version}</lucee-core-version>
-            </manifestEntries>
-          </archive>
-        </configuration>
       </plugin>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -102,13 +64,31 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Name>${project.artifactId}</Bundle-Name>
-            <Bundle-Version>1.0.0</Bundle-Version>
+            <Bundle-Version>${project.version}</Bundle-Version>
             <Private-Package>org.lucee.extension.orm.hibernate</Private-Package>
-            <Import-Package>net.sf.ehcache.hibernate</Import-Package>
             <Export-Package>org.lucee.extension.orm.hibernate,org.lucee.extension.orm.hibernate.jdbc</Export-Package>
           </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifestFile>src/main/extension/META-INF/MANIFEST.mf</manifestFile>
+          </archive>
+          <descriptors>
+            <descriptor>src/main/extension/lex.xml</descriptor>
+          </descriptors>
         </configuration>
       </plugin>
       <plugin>
@@ -145,7 +125,7 @@
         <executions>
           <execution>
             <id>copy-file</id>
-            <phase>package</phase>
+            <phase>lex</phase>
             <goals>
               <goal>copy</goal>
             </goals>
@@ -153,6 +133,18 @@
               <sourceFile>${project.build.directory}/${project.build.finalName}.jar</sourceFile>
               <destinationFile>${project.build.directory}/${project.build.finalName}.lex</destinationFile>
             </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>7.3.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -164,8 +156,8 @@
       <url>https://raw.githubusercontent.com/lucee/mvn/master/releases</url>
     </repository>
     <repository>
-      <id>snapi</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <id>maven</id>
+      <url>https://repo1.maven.org/maven2/</url>
     </repository>
   </repositories>
   <dependencies>
@@ -173,7 +165,7 @@
       <groupId>org.lucee</groupId>
       <artifactId>lucee</artifactId>
       <version>5.3.9.133</version>
-      <scope>compile</scope>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
   <distributionManagement>
@@ -190,16 +182,12 @@
     <name>Hibernate ORM Engine</name>
     <id>b0e494c1-2ff8-44d5-a89770af769e568c</id>
     <class>org.lucee.extension.orm.hibernate.HibernateORMEngine</class>
-    <bundleversion>5.4.29.</bundleversion>
     <releaseType>server</releaseType>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <hibernate.version>5.4.29.Final</hibernate.version>
-    <bundlename>ortus.hibernate</bundlename>
-    <jdk.version>1.7</jdk.version>
+    <bundlename>hibernate.extension</bundlename>
+    <jdk.version>1.8</jdk.version>
+    <description>Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language, providing a framework for mapping an object-oriented domain model to a traditional relational database. Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related database accesses with high-level object handling functions.</description>
     <lucee.version>5.3.9.133</lucee.version>
-    <description>Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language,
- providing a framework for mapping an object-oriented domain model to a traditional relational database. 
- Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related 
- database accesses with high-level object handling functions.</description>
-    <versionAppendix>-BETA</versionAppendix>
   </properties>
 </project>

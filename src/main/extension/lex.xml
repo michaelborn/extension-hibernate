@@ -5,9 +5,19 @@
     <includeBaseDirectory>false</includeBaseDirectory>
 
     <formats>
-        <format>jar</format>
+        <format>zip</format>
     </formats>
+    <fileSets>
+        <fileSet>
+            <directory>${project.build.directory}/META-INF/</directory>
+            <outputDirectory>/META-INF/</outputDirectory>
+        </fileSet>
+    </fileSets>
     <files>
+        <file>
+            <source>${project.basedir}/src/main/extension/META-INF/logo.png</source>
+            <outputDirectory>/META-INF/</outputDirectory>
+        </file>
         <file>
             <source>${project.build.directory}/${project.artifactId}-${project.version}.jar</source>
             <outputDirectory>/jars</outputDirectory>
@@ -16,7 +26,7 @@
     <dependencySets>
         <dependencySet>
             <!-- might have to re-enable to get hibernate's dependencies working.-->
-            <useTransitiveDependencies>false</useTransitiveDependencies>
+            <!-- <useTransitiveDependencies>false</useTransitiveDependencies> -->
             <outputDirectory>/jars</outputDirectory>
             <useProjectArtifact>true</useProjectArtifact>
         </dependencySet>

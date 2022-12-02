@@ -14,8 +14,8 @@
 
    <properties>
       <name>Hibernate ORM Engine</name>
-      <bundlename>hibernate.extension</bundlename>
-      <id>b0e494c1-2ff8-44d5-a89770af769e568c</id>
+      <bundlename>hibernate-extension</bundlename>
+      <id>FAD1E8CB-4F45-4184-86359145767C29DE</id>
       <description>Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language, providing a framework for mapping an object-oriented domain model to a traditional relational database. Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related database accesses with high-level object handling functions.</description>
       <class>org.lucee.extension.orm.hibernate.HibernateORMEngine</class>
       <!-- arg, <version> must be defined at the top level of pom.xml, so this approach doesn't work.-->
@@ -97,36 +97,6 @@
             </executions>
          </plugin>
 
-
-
-         <!-- create jar
-         <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>2.6</version>
-            <extensions>true</extensions>
-
-            <configuration>
-               <excludes>
-                  <exclude>.*</exclude>
-               </excludes>
-               <archive>
-                  <manifestFile>src/main/java/META-INF/MANIFEST.MF</manifestFile>
-                  <manifestEntries>
-                     <mainClass>${class}</mainClass>
-                     <id>${id}</id>
-                     <name>${name}</name>
-                     <startBundles>false</startBundles>
-                     <version>${project.version}</version>
-                     <class>${class}</class>
-                     <description>${description}</description>
-                     <orm>[{'class':'${class}','name':'${bundlename}','version':'${project.version}'}]</orm>
-                     <lucee-core-version>${lucee.version}</lucee-core-version>
-                  </manifestEntries>
-               </archive>
-            </configuration>
-         </plugin> -->
-
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
@@ -147,13 +117,75 @@
                   <instructions>
                      <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                      <Bundle-Name>${project.artifactId}</Bundle-Name>
-                     <Bundle-Version>${project.version}</Bundle-Version>
                      <Private-Package>org.lucee.extension.orm.hibernate</Private-Package>
                      <Export-Package>
                         org.lucee.extension.orm.hibernate,org.lucee.extension.orm.hibernate.jdbc
                      </Export-Package>
+                     <Import-Package>
+                        !lucee.*;,
+                        *
+                     </Import-Package>
+                     
+                     <!-- 
+                        See:
+                        https://liferay.dev/blogs/-/blogs/osgi-and-java-package-imports
+                        https://bnd.bndtools.org/instructions/noimportjava.html
+                     -->
+                     <_noimportjava>true</_noimportjava>
                   </instructions>
                </configuration>
+         </plugin>
+
+         <!--
+            Turns out using the NAME attribute for the lucee extension name breaks the jar manifest spec. 🤦‍♂️
+            See https://github.com/codehaus-plexus/plexus-archiver/blob/7eb5a660a9ccb2968ce4f172baaa949c72e87f87/src/main/java/org/codehaus/plexus/archiver/jar/Manifest.java#L556
+
+            Thus, we have to manually echo this stuff to a custom extension manifest file,
+            then use the maven assembly plugin to copy that file into the resulting .lex extension.
+         -->
+         <plugin>
+            <groupId>com.github.ekryd.echo-maven-plugin</groupId>
+            <artifactId>echo-maven-plugin</artifactId>
+            <version>1.3.2</version>
+            <inherited>false</inherited>
+            <executions>
+               <execution>
+                  <id>copy-starter-manifest</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>echo</goal>
+                  </goals>
+                  <configuration>
+                     <fromFile>/${project.basedir}/src/main/extension/META-INF/MANIFEST.MF</fromFile>
+                     <!-- warning: this plugin appears to wrongly interpolate properties,
+                     so ${project.build.directory} ends up creating the full /home/user/path INSIDE this current directory.
+                     The best workaround appears to be not using those properties, and hardcoding a RELATIVE path instead.-->
+                     <toFile>target/META-INF/MANIFEST.MF</toFile>
+                  </configuration>
+               </execution>
+               <execution>
+                  <id>append-manifest-entries</id>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>echo</goal>
+                  </goals>
+                  <configuration>
+                     <message>name: ${name}
+id: ${id}
+description: ${description}
+version: ${project.version}
+orm: [{'class':'${class}','name':'${artifactId}','version':'${project.version}'}]
+lucee-core-version: ${lucee.version}
+                     </message>
+                     <!-- warning: this plugin appears to wrongly interpolate properties,
+                     so ${project.build.directory} ends up creating the full /home/user/path INSIDE this current directory.
+                     The best workaround appears to be not using those properties, and hardcoding a RELATIVE path instead.-->
+                     <toFile>target/META-INF/MANIFEST.MF</toFile>
+                     <!-- <toFile>test.txt</toFile> -->
+                     <append>true</append>
+                  </configuration>
+               </execution>
+            </executions>
          </plugin>
 
          <plugin>
@@ -167,25 +199,12 @@
                </execution>
             </executions>
             <configuration>
+               <!--
+                  Since Lucee's MANIFEST.MF is incompat with Java's manifest spec,
+                  the Maven Archiver will strip a bunch of entries. Hence, we can't use this option.
                <archive>
-                  <manifestEntries>
-                     <start-bundles>false</start-bundles>
-                     <release-type>server</release-type>
-                  </manifestEntries>
-
-                  <manifestSections>
-                     <manifestSection>
-                        <name>${name}</name>
-                        <manifestEntries>
-                           <id>${id}</id>
-                           <description>${description}</description>
-                           <version>${project.version}</version>
-                           <orm>[{'class':'${class}','name':'${bundlename}','version':'${project.version}'}]</orm>
-                           <lucee-core-version>${lucee.version}</lucee-core-version>
-                        </manifestEntries>
-                     </manifestSection>
-                  </manifestSections>
-               </archive>
+                  <manifestFile>${project.basedir}/src/main/extension/META-INF/MANIFEST.MF</manifestFile>
+               </archive> -->
                <descriptors>
                   <descriptor>src/main/extension/lex.xml</descriptor>
                </descriptors>
@@ -234,7 +253,7 @@
                   <goal>rename</goal>
                </goals>
                <configuration>
-                  <sourceFile>${project.build.directory}/${project.build.finalName}-lex.jar</sourceFile>
+                  <sourceFile>${project.build.directory}/${project.build.finalName}-lex.zip</sourceFile>
                   <destinationFile>${project.build.directory}/${project.build.finalName}.lex</destinationFile>
                </configuration>
                </execution>
@@ -279,20 +298,28 @@
          <scope>provided</scope>
       </dependency>
 
-      <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-osgi -->
-      <dependency>
-         <groupId>org.hibernate</groupId>
-         <artifactId>hibernate-osgi</artifactId>
-         <version>${hibernate.version}</version>
-      </dependency>
+      <!-- javax.xml.bind is no longer provided in Java pre-11, and the Hibernate library needs it.-->
+      <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+      <!-- <dependency>
+         <groupId>javax.xml.bind</groupId>
+         <artifactId>jaxb-api</artifactId>
+         <version>2.4.0-b180830.0359</version>
+      </dependency> -->
+
+      <!-- https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api -->
+      <!-- <dependency>
+         <groupId>javax.persistence</groupId>
+         <artifactId>javax.persistence-api</artifactId>
+         <version>2.2</version>
+      </dependency> -->
+
 
       <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
-      <!-- DISABLED: Prefer Hibernate OSGI package. -->
-      <!-- <dependency>
+      <dependency>
          <groupId>org.hibernate</groupId>
          <artifactId>hibernate-core</artifactId>
          <version>${hibernate.version}</version>
-      </dependency> -->
+      </dependency>
 
       <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-ehcache -->
       <dependency>
@@ -309,7 +336,6 @@
       </dependency>
 
       <!-- https://mvnrepository.com/artifact/antlr/antlr -->
-      <!-- DISABLED: Prefer Hibernate OSGI package, which bundles dependencies. -->
       <!-- <dependency >
          <groupId>antlr</groupId>
          <artifactId>antlr</artifactId>
@@ -318,7 +344,6 @@
 
       <!-- https://mvnrepository.com/artifact/dom4j/dom4j -->
       <!-- WARNING: CVEs! See mvnrepo link for more info. -->
-      <!-- DISABLED: Prefer Hibernate OSGI package, which bundles dependencies. -->
       <!-- <dependency>
          <groupId>dom4j</groupId>
          <artifactId>dom4j</artifactId>
