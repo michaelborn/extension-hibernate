@@ -18,10 +18,6 @@
       <id>FAD1E8CB-4F45-4184-86359145767C29DE</id>
       <description>Hibernate ORM (Hibernate in short) is an object-relational mapping library for the Java language, providing a framework for mapping an object-oriented domain model to a traditional relational database. Hibernate solves object-relational impedance mismatch problems by replacing direct persistence-related database accesses with high-level object handling functions.</description>
       <class>org.lucee.extension.orm.hibernate.HibernateORMEngine</class>
-      <!-- arg, <version> must be defined at the top level of pom.xml, so this approach doesn't work.-->
-      <!-- <bundleversion>5.4.29.</bundleversion>
-      <versionAppendix>-BETA</versionAppendix> -->
-      <!-- <version>${bundleversion}${build.number}${versionAppendix}</version> -->
 
       <!-- Dependency versions -->
       <lucee.version>5.3.9.133</lucee.version>
@@ -174,7 +170,7 @@
 id: ${id}
 description: ${description}
 version: ${project.version}
-orm: [{'class':'${class}','name':'${artifactId}','version':'${project.version}'}]
+orm: [{'class':'${class}','name':'${project.artifactId}','version':'${project.version}'}]
 lucee-core-version: ${lucee.version}
                      </message>
                      <!-- warning: this plugin appears to wrongly interpolate properties,
@@ -210,35 +206,6 @@ lucee-core-version: ${lucee.version}
                </descriptors>
             </configuration>
          </plugin>
-
-         <!-- <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-shade-plugin</artifactId>
-            <version>3.4.1</version>
-            <configuration>
-               <minimizeJar>true</minimizeJar>
-               <artifactSet>
-                  <includes>
-                     <include>org.hibernate:*</include>
-                     <include>javax.servlet:*</include>
-                     <include>antlr:*</include>
-                     <include>org.dom4j:*</include>
-                     <include>org.javaassist:*</include>
-                     <include>jta:*</include>
-                     <include>w3c:dom:*</include>
-                     <include>org-apache-commons-collections:*</include>
-                  </includes>
-               </artifactSet>
-            </configuration>
-            <executions>
-               <execution>
-                  <phase>package</phase>
-                  <goals>
-                     <goal>shade</goal>
-                  </goals>
-               </execution>
-            </executions>
-         </plugin> -->
 
          <!-- https://stackoverflow.com/a/26638952 -->
          <plugin>
@@ -298,22 +265,6 @@ lucee-core-version: ${lucee.version}
          <scope>provided</scope>
       </dependency>
 
-      <!-- javax.xml.bind is no longer provided in Java pre-11, and the Hibernate library needs it.-->
-      <!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
-      <!-- <dependency>
-         <groupId>javax.xml.bind</groupId>
-         <artifactId>jaxb-api</artifactId>
-         <version>2.4.0-b180830.0359</version>
-      </dependency> -->
-
-      <!-- https://mvnrepository.com/artifact/javax.persistence/javax.persistence-api -->
-      <!-- <dependency>
-         <groupId>javax.persistence</groupId>
-         <artifactId>javax.persistence-api</artifactId>
-         <version>2.2</version>
-      </dependency> -->
-
-
       <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
       <dependency>
          <groupId>org.hibernate</groupId>
@@ -335,21 +286,6 @@ lucee-core-version: ${lucee.version}
          <version>1.1.0</version>
       </dependency>
 
-      <!-- https://mvnrepository.com/artifact/antlr/antlr -->
-      <!-- <dependency >
-         <groupId>antlr</groupId>
-         <artifactId>antlr</artifactId>
-         <version>2.7.6</version>
-      </dependency> -->
-
-      <!-- https://mvnrepository.com/artifact/dom4j/dom4j -->
-      <!-- WARNING: CVEs! See mvnrepo link for more info. -->
-      <!-- <dependency>
-         <groupId>dom4j</groupId>
-         <artifactId>dom4j</artifactId>
-         <version>1.6.1</version>
-      </dependency> -->
-
    </dependencies>
 
 
@@ -360,10 +296,10 @@ lucee-core-version: ${lucee.version}
          <id>repo</id>
          <url>https://raw.githubusercontent.com/lucee/mvn/master/releases</url>
       </repository>
-      <repository>
+      <!-- <repository>
          <id>maven</id>
          <url>https://repo1.maven.org/maven2/</url>
-      </repository>
+      </repository> -->
    </repositories>
 
    <scm>
